@@ -19,8 +19,8 @@ class TaskDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(task.title)),
       body: ListView(
         children: [
-          ListTile(title: Text('Category: ${task.category}')),
-          ListTile(title: Text('Priority: ${task.priority}')),
+          ListTile(title: Text('Category: ${task.category.name}')),
+          ListTile(title: Text('Priority: ${task.priority.name}')),
           if (task.dueDate != null) ListTile(title: Text('Due: ${task.dueDate}')),
           if (task.estimatedTimeMinutes != null)
             ListTile(title: Text('Estimated time: ${task.estimatedTimeMinutes} min')),

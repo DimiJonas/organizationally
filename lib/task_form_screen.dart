@@ -4,7 +4,8 @@ import 'task_provider.dart';
 import 'task.dart';
 
 class TaskFormScreen extends ConsumerStatefulWidget {
-  const TaskFormScreen({super.key});
+  final Task? existingTask;
+  const TaskFormScreen({super.key, this.existingTask});
 
   @override
   ConsumerState<TaskFormScreen> createState() => _TaskFormScreenState();
@@ -12,6 +13,35 @@ class TaskFormScreen extends ConsumerStatefulWidget {
 
 class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    final task = widget.existingTask;
+    if (task != null) {
+      _titleController.text = task.title;
+      _dueDate = task.dueDate;
+      _category = task.category;
+      _priority = task.priority;
+      _parentTaskId = task.parentTaskId;
+      _subtaskIds = List.from(task.dependentTaskIds);
+      _estimatedMinutes = task.estimatedTimeMinutes;
+      _dynamicPriorityDates = List.from(task.dynamicPriorityChangeTimes);
+      if (task.repeatInterval != null) {
+        final days = task.repeatInterval!.inDays;
+        if (days % 30 == 0) {
+          _repeatIntervalUnit = 'months';
+          _repeatIntervalValue = days ~/ 30;
+        } else if (days % 7 == 0) {
+          _repeatIntervalUnit = 'weeks';
+          _repeatIntervalValue = days ~/ 7;
+        } else {
+          _repeatIntervalUnit = 'days';
+          _repeatIntervalValue = days;
+        }
+      }
+    }
+  }
 
   final TextEditingController _titleController = TextEditingController();
   DateTime? _dueDate;
@@ -26,9 +56,10 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
 
   void _submitForm() {
     if (!_formKey.currentState!.validate()) return;
+    final isEditing = widget.existingTask != null;
 
     final task = Task(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: isEditing ? widget.existingTask!.id : DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text,
       dueDate: _dueDate,
       category: _category,
@@ -47,7 +78,11 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
           : null,
     );
 
-    ref.read(taskProvider.notifier).addTask(task);
+    if (isEditing) {
+      ref.read(taskProvider.notifier).updateTask(task);
+    } else {
+      ref.read(taskProvider.notifier).addTask(task);
+    }
     Navigator.of(context).pop();
   }
 
@@ -103,7 +138,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 value: _priority,
                 decoration: const InputDecoration(labelText: 'Initial Priority'),
                 items: TaskPriority.values
-                    .map((p) => DropdownMenuItem(value: p, child: Text('Priority $p')))
+                    .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
                     .toList(),
                 onChanged: (value) => setState(() => _priority = value!),
               ),
@@ -112,27 +147,19 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
                 decoration: const InputDecoration(labelText: 'Parent Task'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('None')),
-                  ...allTasks.map((t) => DropdownMenuItem(value: t.id, child: Text(t.title)))
+                  ...allTasks.map((t) => DropdownMenuItem(value: t.id, child: Text(t.title))),
                 ],
-                onChanged: (value) => setState(() => _parentTaskId = value),
+                onChanged: (value) {
+                  setState(() {
+                    _parentTaskId = value;
+                    if (value != null) {
+                      final parentTask = allTasks.firstWhere((t) => t.id == value);
+                      _priority = parentTask.priority;
+                      _category = parentTask.category;
+                    }
+                  });
+                },
               ),
-              const SizedBox(height: 8),
-              const Text('Subtasks'),
-              ...allTasks.map((t) {
-                return CheckboxListTile(
-                  title: Text(t.title),
-                  value: _subtaskIds.contains(t.id),
-                  onChanged: (checked) {
-                    setState(() {
-                      if (checked == true) {
-                        _subtaskIds.add(t.id);
-                      } else {
-                        _subtaskIds.remove(t.id);
-                      }
-                    });
-                  },
-                );
-              }),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Estimated minutes'),
                 keyboardType: TextInputType.number,

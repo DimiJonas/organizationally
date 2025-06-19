@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import 'task.dart';
 
 enum DurationUnit { day, week, month }
@@ -64,6 +63,59 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       return task;
     }).toList();
   }
+
+  void setTaskCompletion(String taskId, bool isCompleted) {
+    final taskIndex = state.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) return;
+
+    final updatedTask = state[taskIndex].copyWith(isCompleted: isCompleted);
+    state = [
+      ...state.sublist(0, taskIndex),
+      updatedTask,
+      ...state.sublist(taskIndex + 1),
+    ];
+
+    if (isCompleted) {
+      // Recursively mark all subtasks as completed
+      _markSubtasksRecursively(taskId, true);
+    } else {
+      // Recursively unmark parent tasks if needed
+      _unmarkParentsIfNecessary(taskId);
+    }
+  }
+
+  void _markSubtasksRecursively(String parentId, bool isCompleted) {
+    final subtasks = state.where((t) => t.parentTaskId == parentId);
+    for (final subtask in subtasks) {
+      final index = state.indexWhere((t) => t.id == subtask.id);
+      if (index != -1) {
+        state = [
+          ...state.sublist(0, index),
+          subtask.copyWith(isCompleted: isCompleted),
+          ...state.sublist(index + 1),
+        ];
+        _markSubtasksRecursively(subtask.id, isCompleted); // recurse
+      }
+    }
+  }
+
+  void _unmarkParentsIfNecessary(String taskId) {
+    final task = state.firstWhere((t) => t.id == taskId);
+    if (task.parentTaskId == null) return;
+
+    final parentId = task.parentTaskId!;
+    final parent = state.firstWhere((t) => t.id == parentId);
+
+    if (parent.isCompleted) {
+      final parentIndex = state.indexWhere((t) => t.id == parentId);
+      state = [
+        ...state.sublist(0, parentIndex),
+        parent.copyWith(isCompleted: false),
+        ...state.sublist(parentIndex + 1),
+      ];
+      _unmarkParentsIfNecessary(parentId); // bubble up
+    }
+  }
 }
 
 Duration durationBetweenDates(DateTime start, DateTime end) {
@@ -80,7 +132,6 @@ Duration userInputToDurationEnum(int value, DurationUnit unit) {
       return Duration(days: 30 * value);
   }
 }
-
 
 final taskProvider = StateNotifierProvider<TaskNotifier, List<Task>>((ref) {
   return TaskNotifier();
