@@ -231,11 +231,11 @@ class _TaskTileState extends ConsumerState<TaskTile> with SingleTickerProviderSt
   Color _priorityColor(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.low:
-        return Colors.green.shade100;
+        return Colors.blue.shade50;
       case TaskPriority.medium:
-        return Colors.orange.shade100;
+        return Colors.orange.shade50;
       case TaskPriority.high:
-        return Colors.red.shade200;
+        return Colors.red.shade100;
     // default:
     //   return Colors.grey.shade200;
     }
