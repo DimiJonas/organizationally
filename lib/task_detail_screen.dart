@@ -5,7 +5,7 @@ import 'package:organizationally/task_provider.dart';
 class TaskDetailScreen extends ConsumerWidget {
   final String taskId;
 
-  TaskDetailScreen({required this.taskId, Key? key}) : super(key: key);
+  const TaskDetailScreen({required this.taskId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,7 +13,7 @@ class TaskDetailScreen extends ConsumerWidget {
     final tasks = ref.watch(taskProvider);
 
     final subtasks = tasks.where((t) => t.parentTaskId == task.id).toList();
-    final dependencies = tasks.where((t) => task.dependentTaskIds.contains(t.id)).toList();
+    final dependencies = tasks.where((t) => task.subTaskIds.contains(t.id)).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(task.title)),

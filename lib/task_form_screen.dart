@@ -24,7 +24,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       _category = task.category;
       _priority = task.priority;
       _parentTaskId = task.parentTaskId;
-      _subtaskIds = List.from(task.dependentTaskIds);
+      _subtaskIds = List.from(task.subTaskIds);
       _estimatedMinutes = task.estimatedTimeMinutes;
       _dynamicPriorityDates = List.from(task.dynamicPriorityChangeTimes);
       if (task.repeatInterval != null) {
@@ -57,15 +57,15 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   void _submitForm() {
     if (!_formKey.currentState!.validate()) return;
     final isEditing = widget.existingTask != null;
-
+    final taskId= isEditing ? widget.existingTask!.id : DateTime.now().millisecondsSinceEpoch.toString();
     final task = Task(
-      id: isEditing ? widget.existingTask!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+      id: taskId,
       title: _titleController.text,
       dueDate: _dueDate,
       category: _category,
       priority: _priority,
       parentTaskId: _parentTaskId,
-      dependentTaskIds: _subtaskIds,
+      subTaskIds: _subtaskIds,
       estimatedTimeMinutes: _estimatedMinutes,
       dynamicPriorityChangeTimes: _dynamicPriorityDates,
       repeatInterval: _repeatIntervalValue != null
@@ -77,6 +77,9 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
               : _repeatIntervalValue! * 30)
           : null,
     );
+    if (_parentTaskId != null){
+      ref.read(taskProvider.notifier).notifyParentOfSubtask(_parentTaskId!, taskId);
+    }
 
     if (isEditing) {
       ref.read(taskProvider.notifier).updateTask(task);

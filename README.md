@@ -1,8 +1,11 @@
-# organizationally
+# organizationally - a mobile app for lists and task organization
 
-organization app
+> Work in Progress
 
-## TBD
+Tasks and Lists can be added with sublists and subtasks. Each item can have a deadline, a timer and be recurring or a one-shot. An item can be checked to signal its completion.
+The app uses colors to visually provide an overview of priority, so its easy to organize daily and choose what to do.
+
+## Ideas
 
 * task categories
 	* repeated

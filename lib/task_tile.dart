@@ -49,7 +49,7 @@ class _TaskTileState extends ConsumerState<TaskTile> with SingleTickerProviderSt
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         color: _priorityColor(task.priority),
-        elevation: task.dependentTaskIds.length + 2,
+        elevation: task.subTaskIds.length + 2,
         child: Stack(
           children: [
             Positioned(

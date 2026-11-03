@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'database_provider.dart';
 import 'task.dart';
 
 enum DurationUnit { day, week, month }
 
 class TaskNotifier extends StateNotifier<List<Task>> {
   TaskNotifier() : super([]);
+  final tasksStreamProvider = StreamProvider.autoDispose((ref) {
+    final db = ref.watch(databaseProvider);
+    return db.watchAllTasks(); // reactive updates
+  });
 
   void addTask(Task task) {
     // TODO: possibly put this in a hashmap for faster search usw. or some other data structure for when the list of tasks grows
@@ -20,6 +25,16 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       for (final task in state)
         if (task.id == updatedTask.id) updatedTask else task,
     ];
+  }
+
+  void notifyParentOfSubtask(String parentId, String subtaskId){
+    for (final task in state) {
+      if (task.id == parentId) {
+        if (!task.subTaskIds.contains(subtaskId)) {
+          task.subTaskIds.add(subtaskId);
+        }
+      }
+    }
   }
 
   void markTaskCompleted(String id) {

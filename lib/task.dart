@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'package:uuid/uuid.dart';
 
 enum TaskCategory { repeated, oneShot, freetime }
@@ -10,7 +9,7 @@ class Task {
   final DateTime? dueDate;
   final TaskCategory category;
   final TaskPriority priority;
-  final List<String> dependentTaskIds;  // tasks this task depends on
+  final List<String> subTaskIds;  // tasks this task depends on
   final String? parentTaskId;  // if this is a subtask
   final int? estimatedTimeMinutes; // optional estimated time for task
   final List<DateTime> dynamicPriorityChangeTimes; // when priority changes
@@ -24,7 +23,7 @@ class Task {
     this.dueDate,
     this.category = TaskCategory.oneShot,
     this.priority = TaskPriority.medium,
-    this.dependentTaskIds = const [],
+    this.subTaskIds = const [],
     this.parentTaskId,
     this.estimatedTimeMinutes,
     this.dynamicPriorityChangeTimes = const [],
@@ -38,7 +37,7 @@ class Task {
     DateTime? dueDate,
     TaskCategory? category,
     TaskPriority? priority,
-    List<String>? dependentTaskIds,
+    List<String>? subTaskIds,
     String? parentTaskId,
     int? estimatedTimeMinutes,
     List<DateTime>? dynamicPriorityChangeTimes,
@@ -52,7 +51,7 @@ class Task {
       dueDate: dueDate ?? this.dueDate,
       category: category ?? this.category,
       priority: priority ?? this.priority,
-      dependentTaskIds: dependentTaskIds ?? this.dependentTaskIds,
+      subTaskIds: subTaskIds ?? this.subTaskIds,
       parentTaskId: parentTaskId ?? this.parentTaskId,
       estimatedTimeMinutes: estimatedTimeMinutes ?? this.estimatedTimeMinutes,
       dynamicPriorityChangeTimes:
